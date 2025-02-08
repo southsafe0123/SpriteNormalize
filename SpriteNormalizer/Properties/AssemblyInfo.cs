@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SpriteNormalize")]
+[assembly: AssemblyTitle("SpriteNormalizer")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("SpriteNormalize")]
+[assembly: AssemblyProduct("SpriteNormalizer")]
 [assembly: AssemblyCopyright("Copyright ©  2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a8e62cb5-2717-4555-9f02-eceffcbbfe3b")]
+[assembly: Guid("88b28048-f9ea-4dde-8ee1-0d5259be4f43")]
 
 // Version information for an assembly consists of the following four values:
 //
