@@ -28,24 +28,18 @@ namespace SpriteNormalizer
                 foreach (var line in File.ReadAllLines(configFilePath))
                 {
                     string trimmedLine = line.Trim();
+                    if (string.IsNullOrEmpty(trimmedLine)) continue;
 
-                    // Bỏ qua dòng trống và dòng không đúng định dạng
-                    if (string.IsNullOrEmpty(trimmedLine))
-                        continue;
-
-                    bool ignoreFolder = trimmedLine.StartsWith("-"); // Nếu có dấu '-', thư mục sẽ không được kiểm tra nhưng vẫn hợp lệ
-
-                    // Loại bỏ * và -
+                    bool ignoreFolder = trimmedLine.StartsWith("-");
                     string folderPath = trimmedLine.Trim('*', '-');
 
-                    // Xử lý folder cấp 1
                     string[] pathParts = folderPath.Split('\\');
 
                     if (pathParts.Length == 1)
                     {
                         if (ignoreFolder)
                         {
-                            ignoredFolders.Add(pathParts[0]); // Thêm vào danh sách thư mục hợp lệ nhưng không kiểm tra
+                            ignoredFolders.Add(pathParts[0]);
                         }
                         else
                         {
@@ -71,6 +65,29 @@ namespace SpriteNormalizer
             catch (Exception ex)
             {
                 Console.WriteLine($"Error reading configuration file: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Load event name from a text file and return it as a string.
+        /// </summary>
+        public static void LoadEventName(string eventFilePath, out string eventName)
+        {
+            if (!File.Exists(eventFilePath))
+            {
+                Console.WriteLine($"Error: Event file not found - {eventFilePath}");
+                eventName = "Unknown Event";
+            }
+
+            try
+            {
+                string eventNameInText = File.ReadAllText(eventFilePath).Trim();
+                eventName= string.IsNullOrEmpty(eventNameInText) ? "Unnamed Event" : eventNameInText;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading event file: {ex.Message}");
+                eventName = "Error Reading Event";
             }
         }
     }
