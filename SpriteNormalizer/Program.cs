@@ -69,7 +69,7 @@ namespace SpriteNormalizer
             FolderConfigReader.LoadEventName(eventFilePath, out eventName);
 
             // ✅ Chạy kiểm tra sprite (tên file trong equipment & icon)
-            SpriteCheckResult spriteCheckResult = SpriteNameChecker.CheckSpriteNames(folderPath);
+            SpriteCheckResult spriteCheckResult = SpriteChecker.CheckSpriteNames(folderPath);
 
             // ✅ Hiển thị kết quả kiểm tra tên sprite
             DisplayManager.ShowSpriteRenameResults(spriteCheckResult);

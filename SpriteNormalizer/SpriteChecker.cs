@@ -6,31 +6,34 @@ using System.Text.RegularExpressions;
 
 namespace SpriteNormalizer
 {
-    internal static class SpriteNameChecker
+    internal static class SpriteChecker
     {
-        private static readonly string[] ValidEquipmentNames = { "weapon", "back", "boot", "cloth", "helmet" };
-        private static readonly string[] ValidPetNames = { "pet" };
-        private static readonly string[] ValidSkinNames = { "body", "eye", "hair", "facehair" };
+        private static readonly Dictionary<string, string[]> ValidFileNames = new Dictionary<string, string[]>
+        {
+            { "equipment", new string[] { "weapon", "back", "boot", "cloth", "helmet" } },
+            { "pet", new string[] { "pet" } },
+            { "skin", new string[] { "body", "eye", "hair", "facehair" } },
+            { "skin/evo", new string[] { "body", "eye", "hair", "facehair" } }
+        };
+
+        private static readonly string[] ValidNpcNames = { "back", "cloth", "helmet", "boot" }; // Weapon là tùy chọn
 
         /// <summary>
-        /// Kiểm tra file PNG trong các thư mục equipment, pet, skin và skin/evo.
+        /// Kiểm tra file PNG trong các thư mục equipment, pet, skin, skin/evo và npc.
         /// </summary>
         public static SpriteCheckResult CheckSpriteNames(string rootPath)
         {
-            var missingFiles = new HashSet<string>(); // ✅ Tránh lặp lại thông báo thiếu file
+            var missingFiles = new HashSet<string>();
             var invalidFiles = new List<string>();
 
-            // ✅ Kiểm tra Equipment
-            CheckFolderPair(rootPath, "equipment", "equipment/icon", ValidEquipmentNames, missingFiles, invalidFiles);
+            // ✅ Kiểm tra Equipment, Pet, Skin, Skin/Evo
+            foreach (var folder in ValidFileNames.Keys)
+            {
+                CheckFolderPair(rootPath, folder, $"{folder}/icon", ValidFileNames[folder], missingFiles, invalidFiles);
+            }
 
-            // ✅ Kiểm tra Pet
-            CheckFolderPair(rootPath, "pet", "pet/icon", ValidPetNames, missingFiles, invalidFiles);
-
-            // ✅ Kiểm tra Skin
-            CheckFolderPair(rootPath, "skin", "skin/icon", ValidSkinNames, missingFiles, invalidFiles);
-
-            // ✅ Kiểm tra Skin/Evo
-            CheckFolderPair(rootPath, "skin/evo", "skin/evo/icon", ValidSkinNames, missingFiles, invalidFiles);
+            // ✅ Kiểm tra NPC riêng biệt
+            CheckNpcFolder(rootPath, missingFiles, invalidFiles);
 
             return new SpriteCheckResult(missingFiles.ToList(), invalidFiles);
         }
@@ -49,8 +52,8 @@ namespace SpriteNormalizer
                 return;
             }
 
-            var mainFiles = GetNormalizedFileNames(mainPath);
-            var iconFiles = GetNormalizedFileNames(iconPath);
+            var mainFiles = GetFileNames(mainPath);
+            var iconFiles = GetFileNames(iconPath);
 
             // ✅ Kiểm tra file bị thiếu
             CheckMissingFiles(mainFiles, iconFiles, mainFolder, iconFolder, validNames, missingFiles);
@@ -66,23 +69,45 @@ namespace SpriteNormalizer
         }
 
         /// <summary>
-        /// Lấy danh sách file PNG trong một thư mục, chuẩn hóa tên file để nhận diện chính xác.
+        /// Kiểm tra thư mục NPC.
         /// </summary>
-        private static Dictionary<string, string> GetNormalizedFileNames(string directory)
+        private static void CheckNpcFolder(string rootPath, HashSet<string> missingFiles, List<string> invalidFiles)
+        {
+            string npcPath = Path.Combine(rootPath, "npc");
+
+            if (!Directory.Exists(npcPath))
+            {
+                Logger.LogError($"Missing directory: {npcPath}");
+                return;
+            }
+
+            var npcFiles = GetFileNames(npcPath);
+
+            // ✅ Kiểm tra file bị thiếu (ngoại trừ weapon)
+            CheckEssentialFiles(npcFiles, "npc", ValidNpcNames, missingFiles);
+
+            // ✅ Kiểm tra file sai tên (cho phép weapon)
+            CheckInvalidFileNames(npcFiles, "npc", ValidNpcNames.Concat(new[] { "weapon" }).ToArray(), invalidFiles);
+        }
+
+        /// <summary>
+        /// Lấy danh sách file PNG trong một thư mục.
+        /// </summary>
+        private static HashSet<string> GetFileNames(string directory)
         {
             return Directory.GetFiles(directory, "*.png")
-                .Select(f => new { Original = f, Normalized = NormalizeFileName(Path.GetFileNameWithoutExtension(f)) })
-                .ToDictionary(x => x.Normalized, x => x.Original, StringComparer.OrdinalIgnoreCase);
+                .Select(f => Path.GetFileName(f).ToLower()) // Không phân biệt chữ hoa/thường
+                .ToHashSet();
         }
 
         /// <summary>
         /// Kiểm tra file bị thiếu giữa hai thư mục.
         /// </summary>
-        private static void CheckMissingFiles(Dictionary<string, string> source, Dictionary<string, string> target, string sourceFolder, string targetFolder, string[] validNames, HashSet<string> missingFiles)
+        private static void CheckMissingFiles(HashSet<string> source, HashSet<string> target, string sourceFolder, string targetFolder, string[] validNames, HashSet<string> missingFiles)
         {
-            foreach (var file in source.Keys)
+            foreach (var file in source)
             {
-                if (!target.ContainsKey(file) && !IsInvalidFileName(file, validNames))
+                if (!target.Contains(file) && !IsValidFileName(file, validNames))
                 {
                     missingFiles.Add($"Missing in {targetFolder}: {file}.png");
                 }
@@ -92,13 +117,13 @@ namespace SpriteNormalizer
         /// <summary>
         /// Kiểm tra file có tên không hợp lệ.
         /// </summary>
-        private static void CheckInvalidFileNames(Dictionary<string, string> files, string folder, string[] validNames, List<string> invalidFiles)
+        private static void CheckInvalidFileNames(HashSet<string> files, string folder, string[] validNames, List<string> invalidFiles)
         {
-            foreach (var file in files.Keys)
+            foreach (var file in files)
             {
-                if (IsInvalidFileName(file, validNames))
+                if (!IsValidFileName(file, validNames))
                 {
-                    invalidFiles.Add($"Invalid file in {folder}: {file}.png");
+                    invalidFiles.Add($"Invalid file in {folder}: {file}");
                 }
             }
         }
@@ -106,11 +131,11 @@ namespace SpriteNormalizer
         /// <summary>
         /// Kiểm tra xem có đủ file gốc không.
         /// </summary>
-        private static void CheckEssentialFiles(Dictionary<string, string> files, string folder, string[] validNames, HashSet<string> missingFiles)
+        private static void CheckEssentialFiles(HashSet<string> files, string folder, string[] validNames, HashSet<string> missingFiles)
         {
             foreach (var validName in validNames)
             {
-                if (!files.Keys.Any(f => f.StartsWith(validName)))
+                if (!files.Any(f => f.StartsWith(validName)))
                 {
                     missingFiles.Add($"Missing in {folder}: {validName}.png");
                 }
@@ -120,16 +145,10 @@ namespace SpriteNormalizer
         /// <summary>
         /// Xác định xem file có tên hợp lệ hay không.
         /// </summary>
-        private static bool IsInvalidFileName(string fileName, string[] validNames)
+        private static bool IsValidFileName(string fileName, string[] validNames)
         {
             string baseName = NormalizeFileName(fileName);
-
-            if (!validNames.Any(valid => baseName.StartsWith(valid)))
-            {
-                return true;
-            }
-
-            return false;
+            return validNames.Any(valid => baseName.StartsWith(valid));
         }
 
         /// <summary>
@@ -138,8 +157,6 @@ namespace SpriteNormalizer
         private static string NormalizeFileName(string fileName)
         {
             string baseName = Path.GetFileNameWithoutExtension(fileName).ToLower();
-
-            // Chuẩn hóa tên file để nhận diện các số đánh dấu giống nhau
             var match = Regex.Match(baseName, @"^(.*?)[\s_\-]*\(?(\d*)\)?$");
             string namePart = match.Groups[1].Value.Trim();
             string numberPart = match.Groups[2].Success && match.Groups[2].Value != "" ? $"({match.Groups[2].Value})" : "";
