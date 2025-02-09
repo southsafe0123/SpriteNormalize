@@ -94,7 +94,7 @@ namespace SpriteNormalizer
         /// </summary>
         public static bool ConfirmFolderDeletion()
         {
-            Logger.LogInfo("\nDo you want to delete extra folders? (yes/no): ");
+            Logger.LogInfo("\nDo you want to delete extra folders? (y/n): ");
             string input = Console.ReadLine().Trim().ToLower();
             return input == "yes";
         }

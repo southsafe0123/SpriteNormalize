@@ -18,7 +18,7 @@ namespace SpriteNormalizer
             // ✅ Tự động lấy đường dẫn file EventName.txt
             string eventFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EventName.txt");
 
-            
+
 
             // ✅ Load valid folders từ file TXT
             HashSet<string> validTopFolders;
@@ -37,8 +37,7 @@ namespace SpriteNormalizer
             FileChecker.InitializeValidFolders(validTopFolders, validSubFolders, ignoredFolders);
 
             // ✅ Nhập đường dẫn cần kiểm tra
-            //string folderPath = DisplayManager.GetUserInput("Enter the directory path to check:");
-            string folderPath = @"E:\Anntest\Birthday";
+            string folderPath = DisplayManager.GetUserInput("Enter the directory path to check:");
 
             if (!Directory.Exists(folderPath))
             {
@@ -53,17 +52,17 @@ namespace SpriteNormalizer
             DisplayManager.ShowFolderCheckResults(result);
 
             // ✅ Hỏi người dùng có muốn xoá folder dư thừa không
-            //if (result.ExtraFolders.Count > 0)
-            //{
-            //    if (DisplayManager.ConfirmFolderDeletion())
-            //    {
-            //        FileCleaner.DeleteExtraFolders(folderPath, result.ExtraFolders);
-            //    }
-            //    else
-            //    {
-            //        DisplayManager.ShowSkippedFolderDeletion();
-            //    }
-            //}
+            if (result.ExtraFolders.Count > 0)
+            {
+                if (DisplayManager.ConfirmFolderDeletion())
+                {
+                    FileCleaner.DeleteExtraFolders(folderPath, result.ExtraFolders);
+                }
+                else
+                {
+                    DisplayManager.ShowSkippedFolderDeletion();
+                }
+            }
 
             string eventName;
             FolderConfigReader.LoadEventName(eventFilePath, out eventName);
@@ -73,13 +72,14 @@ namespace SpriteNormalizer
 
             // ✅ Hiển thị kết quả kiểm tra tên sprite
             DisplayManager.ShowSpriteRenameResults(spriteCheckResult);
+            Logger.LogWarning("Rename with warning will make error. check file first...");
 
 
-           
             string answer = DisplayManager.GetUserInput("Rename?(y/n)");
+
             if (answer == "y")
             {
-                SpriteRename.RenameSprites(folderPath,eventName);
+                SpriteRename.RenameSprites(folderPath, eventName);
             }
         }
     }
