@@ -73,6 +73,14 @@ namespace SpriteNormalizer
 
             // ✅ Hiển thị kết quả kiểm tra tên sprite
             DisplayManager.ShowSpriteRenameResults(spriteCheckResult);
+
+
+           
+            string answer = DisplayManager.GetUserInput("Rename?(y/n)");
+            if (answer == "y")
+            {
+                SpriteRename.RenameSprites(folderPath,eventName);
+            }
         }
     }
 }
