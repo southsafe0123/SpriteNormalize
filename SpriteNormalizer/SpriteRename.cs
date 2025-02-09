@@ -31,6 +31,7 @@ namespace SpriteNormalizer
             RenameEquipmentAndPet(rootPath, eventName);
             RenameSkinFiles(rootPath, eventName);
             RenameIngredientFiles(rootPath, eventName);
+            RenameNpcFiles(rootPath, eventName);
         }
 
         /// <summary>
@@ -83,8 +84,9 @@ namespace SpriteNormalizer
             }
         }
 
+
         /// <summary>
-        /// Đổi tên Skin và Skin/Evo.
+        /// Đổi tên Skin và Skin/Evo, đảm bảo đồng bộ với Skin/Evo/Icon.
         /// </summary>
         private static void RenameSkinFiles(string rootPath, string eventName)
         {
@@ -93,7 +95,8 @@ namespace SpriteNormalizer
             string evoPath = Path.Combine(skinPath, "evo");
             string evoIconPath = Path.Combine(evoPath, "icon");
 
-            if (!Directory.Exists(skinPath) || !Directory.Exists(skinIconPath) || !Directory.Exists(evoPath) || !Directory.Exists(evoIconPath))
+            if (!Directory.Exists(skinPath) || !Directory.Exists(skinIconPath) ||
+                !Directory.Exists(evoPath) || !Directory.Exists(evoIconPath))
             {
                 Logger.LogError($"Missing skin directories: {skinPath}, {skinIconPath}, {evoPath}, {evoIconPath}");
                 return;
@@ -106,14 +109,206 @@ namespace SpriteNormalizer
 
             var validFiles = GetValidFilesForRename(skinFiles, skinIconFiles, ValidSkinNames);
 
-            RenameSkinGroup(validFiles, skinFiles, skinPath, eventName, "skin", 0);
-            RenameSkinGroup(validFiles, skinIconFiles, skinIconPath, eventName, "skin/icon", 0);
+            // ✅ Khởi tạo số thứ tự bắt đầu từ skin
+            Dictionary<string, int> startIndices = ValidSkinNames.ToDictionary(name => name, name => 0);
 
-            int maxIndex = skinFiles.Values.SelectMany(f => f).Select(f => ExtractNumber(f)).DefaultIfEmpty(0).Max() + 1;
+            // ✅ Đổi tên Skin và Skin/Icon trước
+            RenameSkinGroup(validFiles, skinFiles, skinPath, eventName, "skin", startIndices);
+            RenameSkinGroup(validFiles, skinIconFiles, skinIconPath, eventName, "skin/icon", startIndices);
 
-            RenameSkinGroup(validFiles, evoFiles, evoPath, eventName, "skin/evo", maxIndex);
-            RenameSkinGroup(validFiles, evoIconFiles, evoIconPath, eventName, "skin/evo/icon", maxIndex);
+            // ✅ Lưu số thứ tự cao nhất từ `skin`
+            Dictionary<string, int> evoIndices = new Dictionary<string, int>(startIndices);
+
+            foreach (var key in ValidSkinNames)
+            {
+                int maxIndex = skinFiles.ContainsKey(key)
+                    ? skinFiles[key].Select(f => ExtractNumber(Path.GetFileNameWithoutExtension(f))).DefaultIfEmpty(-1).Max() + 1
+                    : 0;
+                evoIndices[key] = maxIndex;
+            }
+
+            // ✅ Duyệt qua skin/evo và đảm bảo đổi tên cả skin/evo/icon
+            RenameEvoAndEvoIconFiles(validFiles, evoFiles, evoIconFiles, evoPath, evoIconPath, eventName, evoIndices);
         }
+
+        /// <summary>
+        /// ✅ Đổi tên file trong Skin/Evo và đồng thời đổi tên file tương ứng trong Skin/Evo/Icon.
+        /// </summary>
+        private static void RenameEvoAndEvoIconFiles(
+            HashSet<string> validFiles,
+            Dictionary<string, List<string>> evoFiles,
+            Dictionary<string, List<string>> evoIconFiles,
+            string evoPath,
+            string evoIconPath,
+            string eventName,
+            Dictionary<string, int> evoIndices)
+        {
+            // 🔹 Dictionary để ánh xạ file gốc trong `evo` với tên mới
+            Dictionary<string, string> evoRenameMap = new Dictionary<string, string>();
+
+            foreach (var fileGroup in evoFiles)
+            {
+                if (!validFiles.Contains(fileGroup.Key))
+                {
+                    Logger.LogWarning($"Skipping rename in skin/evo: {fileGroup.Key} (Missing or Invalid)");
+                    continue;
+                }
+
+                string baseName = CapitalizeFirstLetter(fileGroup.Key);
+                var sortedEvoFiles = fileGroup.Value.OrderBy(f => ExtractNumber(Path.GetFileNameWithoutExtension(f))).ToList();
+
+                if (!evoIndices.ContainsKey(fileGroup.Key))
+                {
+                    Logger.LogError($"Evo file {fileGroup.Key} is missing reference index! Skipping...");
+                    continue;
+                }
+
+                int currentIndex = evoIndices[fileGroup.Key];
+
+                for (int i = 0; i < sortedEvoFiles.Count; i++)
+                {
+                    string oldEvoPath = sortedEvoFiles[i];
+                    string newEvoFileName = $"{eventName}_{baseName}_{currentIndex}.png";
+                    string newEvoPath = Path.Combine(evoPath, newEvoFileName);
+
+                    // ✅ Lưu lại tên gốc và tên mới
+                    evoRenameMap[Path.GetFileName(oldEvoPath)] = newEvoFileName;
+
+                    if (!oldEvoPath.Equals(newEvoPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        File.Move(oldEvoPath, newEvoPath);
+                        Logger.LogInfo($"Renamed in skin/evo: {Path.GetFileName(oldEvoPath)} → {newEvoFileName}");
+                    }
+
+                    currentIndex++;
+                }
+
+                evoIndices[fileGroup.Key] = currentIndex;
+            }
+
+            // ✅ Đổi tên file trong Skin/Evo/Icon dựa theo evoRenameMap
+            RenameEvoIconFiles(evoIconFiles, evoIconPath, eventName, "skin/evo/icon", evoRenameMap);
+        }
+
+        /// <summary>
+        /// ✅ Đổi tên file trong Skin/Evo/Icon, đảm bảo ánh xạ chính xác với Skin/Evo.
+        /// </summary>
+        private static void RenameEvoIconFiles(
+            Dictionary<string, List<string>> evoIconFiles,
+            string evoIconPath,
+            string eventName,
+            string folderName,
+            Dictionary<string, string> evoRenameMap)
+        {
+            foreach (var fileGroup in evoIconFiles)
+            {
+                string baseName = CapitalizeFirstLetter(fileGroup.Key);
+                var sortedEvoIconFiles = fileGroup.Value.OrderBy(f => ExtractNumber(Path.GetFileNameWithoutExtension(f))).ToList();
+
+                for (int i = 0; i < sortedEvoIconFiles.Count; i++)
+                {
+                    string oldIconPath = sortedEvoIconFiles[i];
+                    string originalFileName = Path.GetFileName(oldIconPath);
+
+                    // 🔍 Tìm tên mới từ evoRenameMap
+                    if (evoRenameMap.TryGetValue(originalFileName, out string newFileName))
+                    {
+                        string newIconPath = Path.Combine(evoIconPath, newFileName);
+
+                        if (!oldIconPath.Equals(newIconPath, StringComparison.OrdinalIgnoreCase))
+                        {
+                            File.Move(oldIconPath, newIconPath);
+                            Logger.LogInfo($"Renamed in {folderName}: {originalFileName} → {newFileName}");
+                        }
+                    }
+                    else
+                    {
+                        Logger.LogWarning($"No matching evo file found for {originalFileName} in skin/evo/icon. Skipping...");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Đổi tên file trong Skin & Skin/Evo, **đảm bảo số thứ tự đồng bộ**.
+        /// </summary>
+        private static Dictionary<string, int> RenameSkinGroup(
+            HashSet<string> validFiles,
+            Dictionary<string, List<string>> fileGroups,
+            string directory,
+            string eventName,
+            string folderName,
+            Dictionary<string, int> startIndices)
+        {
+            Dictionary<string, int> updatedIndices = new Dictionary<string, int>(startIndices);
+
+            foreach (var fileGroup in fileGroups)
+            {
+                if (!validFiles.Contains(fileGroup.Key))
+                {
+                    Logger.LogWarning($"Skipping rename in {folderName}: {fileGroup.Key} (Missing or Invalid)");
+                    continue;
+                }
+
+                string baseName = CapitalizeFirstLetter(fileGroup.Key);
+                var sortedFiles = fileGroup.Value.OrderBy(f => ExtractNumber(Path.GetFileNameWithoutExtension(f))).ToList();
+
+                if (!updatedIndices.ContainsKey(fileGroup.Key))
+                    updatedIndices[fileGroup.Key] = 0;
+
+                int currentIndex = updatedIndices[fileGroup.Key];
+
+                for (int i = 0; i < sortedFiles.Count; i++)
+                {
+                    RenameFile(sortedFiles[i], directory, eventName, baseName, currentIndex, folderName);
+                    currentIndex++;
+                }
+
+                updatedIndices[fileGroup.Key] = currentIndex;
+            }
+
+            return updatedIndices;
+        }
+
+        /// <summary>
+        /// ✅ Đổi tên file trong Skin/Evo/Icon **ĐẢM BẢO KHỚP VỚI Skin/Evo**.
+        /// </summary>
+        private static void RenameSkinIconGroup(
+            HashSet<string> validFiles,
+            Dictionary<string, List<string>> fileGroups,
+            string directory,
+            string eventName,
+            string folderName,
+            Dictionary<string, int> evoIndices)
+        {
+            foreach (var fileGroup in fileGroups)
+            {
+                if (!validFiles.Contains(fileGroup.Key))
+                {
+                    Logger.LogWarning($"Skipping rename in {folderName}: {fileGroup.Key} (Missing or Invalid)");
+                    continue;
+                }
+
+                string baseName = CapitalizeFirstLetter(fileGroup.Key);
+                var sortedFiles = fileGroup.Value.OrderBy(f => ExtractNumber(Path.GetFileNameWithoutExtension(f))).ToList();
+
+                if (!evoIndices.ContainsKey(fileGroup.Key))
+                {
+                    Logger.LogError($"Evo file {fileGroup.Key} is missing reference index! Skipping...");
+                    continue;
+                }
+
+                int currentIndex = evoIndices[fileGroup.Key];
+
+                for (int i = 0; i < sortedFiles.Count; i++)
+                {
+                    RenameFile(sortedFiles[i], directory, eventName, baseName, currentIndex, folderName);
+                    currentIndex++;
+                }
+            }
+        }
+
+
 
         /// <summary>
         /// ✅ Đổi tên file trong Equipment & Pet
@@ -138,28 +333,7 @@ namespace SpriteNormalizer
             }
         }
 
-        /// <summary>
-        /// ✅ Đổi tên file trong Skin & Skin/Evo
-        /// </summary>
-        private static void RenameSkinGroup(HashSet<string> validFiles, Dictionary<string, List<string>> fileGroups, string directory, string eventName, string folderName, int startIndex)
-        {
-            foreach (var fileGroup in fileGroups)
-            {
-                if (!validFiles.Contains(fileGroup.Key))
-                {
-                    Logger.LogWarning($"Skipping rename in {folderName}: {fileGroup.Key} (Missing or Invalid)");
-                    continue;
-                }
-
-                string baseName = CapitalizeFirstLetter(fileGroup.Key);
-                var sortedFiles = fileGroup.Value.OrderBy(f => ExtractNumber(f)).ToList();
-
-                for (int i = 0; i < sortedFiles.Count; i++)
-                {
-                    RenameFile(sortedFiles[i], directory, eventName, baseName, startIndex + i, folderName);
-                }
-            }
-        }
+      
         private static Dictionary<string, List<string>> GetGroupedFileNames(string directory)
         {
             var files = Directory.GetFiles(directory, "*.png");
@@ -194,13 +368,19 @@ namespace SpriteNormalizer
             return match.Success ? int.Parse(match.Value) : 0;
         }
 
-
         /// <summary>
         /// ✅ Đổi tên file theo đúng định dạng [EventName] Item_[Index].png
         /// </summary>
         private static void RenameFile(string oldPath, string directory, string eventName, string baseName, int index, string folderName)
         {
-            string newFileName = $"{eventName} Item_{index}.png";
+            string newFileName;
+
+            // ✅ Nếu là ingredient thì bỏ qua baseName
+            if (folderName == "ingredient")
+                newFileName = $"{eventName} Item_{index}.png";
+            else
+                newFileName = $"{eventName}_{baseName}_{index}.png";
+
             string newPath = Path.Combine(directory, newFileName);
 
             if (!oldPath.Equals(newPath, StringComparison.OrdinalIgnoreCase))
@@ -209,7 +389,35 @@ namespace SpriteNormalizer
                 Logger.LogInfo($"Renamed in {folderName}: {Path.GetFileName(oldPath)} → {newFileName}");
             }
         }
+        /// <summary>
+        /// Đổi tên file trong thư mục npc theo định dạng [tên gốc]_[eventName].png
+        /// </summary>
+        private static void RenameNpcFiles(string rootPath, string eventName)
+        {
+            string npcPath = Path.Combine(rootPath, "npc");
 
+            if (!Directory.Exists(npcPath))
+            {
+                Logger.LogError($"Missing directory: {npcPath}");
+                return;
+            }
+
+            var npcFiles = Directory.GetFiles(npcPath, "*.png").ToList();
+
+            foreach (var file in npcFiles)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(file);
+                string extension = Path.GetExtension(file);
+                string newFileName = $"{fileName}_{eventName}{extension}";
+                string newPath = Path.Combine(npcPath, newFileName);
+
+                if (!file.Equals(newPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    File.Move(file, newPath);
+                    Logger.LogInfo($"Renamed in npc: {Path.GetFileName(file)} → {newFileName}");
+                }
+            }
+        }
 
         private static string CapitalizeFirstLetter(string input) => char.ToUpper(input[0], CultureInfo.InvariantCulture) + input.Substring(1).ToLower();
     }
