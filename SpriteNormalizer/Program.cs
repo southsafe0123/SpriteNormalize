@@ -9,7 +9,7 @@ namespace SpriteNormalizer
     {
         static void Main()
         {
-            Logger.Log("Input Folder Link: ");
+            Logger.Announce("Input Folder Link: ");
             string folderLink = Console.ReadLine();
             CheckFolder(folderLink);
             RenameFile(folderLink);
@@ -29,12 +29,17 @@ namespace SpriteNormalizer
                 Dictionary<string, string> fileNameChangerDict = ConfigController.FileNameChangerConverter(txtFileNameChanger);
                 FileNameChanger fileNameChanger = new FileNameChanger(fileNameChangerDict);
 
-                fileNameChanger.CheckFile(path);
+                fileNameChanger.CheckFile(path, out List<string> correctFiles);
 
-                Logger.Log("Rename Ignore All Warning?(y/n)");
+                Logger.Announce("Rename Ignore All Warning?(y/n)");
                 if (Console.ReadLine() == "y")
                 {
-                    fileNameChanger.RenameFile(path);
+                    Logger.Announce("Starting Basic Rename...");
+                    fileNameChanger.RenameFiles(correctFiles,false);
+                    Logger.Success("Done~");
+                    Logger.Announce("Starting Advance Rename...");
+                    fileNameChanger.ReIDFiles(path);
+                    Logger.Success("Renamed Success... Check your files again :D");
                 }
             }
             #endregion

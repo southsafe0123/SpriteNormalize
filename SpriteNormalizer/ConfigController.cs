@@ -56,7 +56,6 @@ public class ConfigController
         {
             result.Add(part.Trim());
         }
-        result.RemoveAt(0);
         return result;
     }
 }

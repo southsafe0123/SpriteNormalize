@@ -28,7 +28,7 @@ class FolderChecker
             return;
         }
 
-        Logger.Log("Checking Folder...");
+        Logger.Announce("Checking Folder...");
 
         List<string> actualFolders = Directory.GetDirectories(path, "*", SearchOption.AllDirectories)
             .Select(folder => Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar).ToLower()) 
@@ -46,20 +46,25 @@ class FolderChecker
             .Where(folder => !normalizedFolderCheckerList.Contains(folder, StringComparer.OrdinalIgnoreCase))
             .ToList();
 
+
+        List<string> filteredExtraFolders = extraFolders
+   .Where(file => !file.Contains(@"\element"))
+   .ToList();
+
         if (missingFolders.Count > 0)
         {
             Logger.Warning("Missing Folder:");
-            missingFolders.ForEach(Logger.Warning);
+            missingFolders.ForEach(Logger.Log);
         }
         else
         {
             Logger.Success("None Missing Folder");
         }
 
-        if (extraFolders.Count > 0)
+        if (filteredExtraFolders.Count > 0)
         {
             Logger.Warning("Extra Folder:");
-            extraFolders.ForEach(Logger.Warning);
+            filteredExtraFolders.ForEach(Logger.Log);
         }
         else
         {
