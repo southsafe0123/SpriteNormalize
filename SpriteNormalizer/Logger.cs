@@ -1,47 +1,31 @@
-﻿using System;
+using System;
 
-namespace SpriteNormalizer
+public static class Logger
 {
-    internal static class Logger
+    public static void Log(string s)
     {
-        /// <summary>
-        /// Hiển thị thông tin thông thường
-        /// </summary>
-        public static void LogInfo(string message)
-        {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(message);
-            Console.ResetColor();
-        }
-
-        /// <summary>
-        /// Hiển thị cảnh báo
-        /// </summary>
-        public static void LogWarning(string message)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("WARNING: " + message);
-            Console.ResetColor();
-        }
-
-        /// <summary>
-        /// Hiển thị lỗi
-        /// </summary>
-        public static void LogError(string message)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("ERROR: " + message);
-            Console.ResetColor();
-        }
-
-        /// <summary>
-        /// Hiển thị thành công
-        /// </summary>
-        public static void LogSuccess(string message)
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("SUCCESS: " + message);
-            Console.ResetColor();
-        }
+        Console.WriteLine($"Log - {s}");
+        Console.WriteLine();
+    }
+    public static void Success(string s)
+    {
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"Success - {s}");
+        Console.WriteLine();
+        Console.ResetColor();
+    }
+    public static void Error(string s)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"Error - {s}");
+        Console.WriteLine();
+        Console.ResetColor();
+    }
+    public static void Warning(string s)
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine($"Warning - {s}");
+        Console.WriteLine();
+        Console.ResetColor();
     }
 }
