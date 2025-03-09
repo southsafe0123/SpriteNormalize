@@ -45,6 +45,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigController.cs" />
+    <Compile Include="FileNameChanger.cs" />
+    <Compile Include="FolderChecker.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
