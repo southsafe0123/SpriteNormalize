@@ -1,0 +1,11 @@
+eventName-Birthday
+*weapon-E_Weapon_ID
+*back-E_Back_ID
+*boot-E_Boot_ID
+*cloth-E_Cloth_ID
+*helmet-E_Helmet_ID
+*body-E_Body_ID
+*eye-E_Eye_ID
+*facehair-E_FaceHair_ID
+*hair-E_Hair_ID
+*pet-E_Pet_ID

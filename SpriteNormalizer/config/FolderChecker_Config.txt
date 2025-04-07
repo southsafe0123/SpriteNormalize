@@ -1,1 +1,15 @@
-dsada
+\Element
+*\Boss
+*\Boss\Icon
+*\Equipment
+*\Equipment\Icon
+*\Ingredient
+*\Npc
+*\Pet
+*\Pet\Icon
+*\Pet\Evo
+*\Pet\Evo\Icon
+*\Skin
+*\Skin\Icon
+*\Skin\Evo
+*\Skin\Evo\Icon
