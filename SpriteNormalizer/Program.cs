@@ -9,11 +9,12 @@ namespace SpriteNormalizer
     {
         static void Main()
         {
-            //Logger.Announce("Input Event Folder Link: ");
-            //string folderLink = Console.ReadLine();
-            string folderLink = "D:\\Setup\\BirthdayTest";
-            //CheckFolder(folderLink);
-            //RenameFile(folderLink);
+            Logger.Announce("Input Event Folder Link: ");
+            string folderLink = Console.ReadLine();
+            Logger.Announce("Input mmo_mft/code/asset Link: ");
+            string assetLink = Console.ReadLine();
+            CheckFolder(folderLink);
+            RenameFile(folderLink);
             MovingFolder(folderLink);
             UpdateMetaFile(folderLink);
             MovingFile(folderLink);
@@ -34,26 +35,24 @@ namespace SpriteNormalizer
 
                 fileNameChanger.CheckFile(path, out List<string> correctFiles);
 
-                //Logger.Announce("Rename Ignore All Warning?(y/n)");
-                //if (Console.ReadLine() == "y")
-                //{
-                Logger.Announce("Starting Basic Rename...");
-                fileNameChanger.RenameFiles(correctFiles, false);
-                Logger.Success("Done~");
-                Logger.Announce("Starting Advance Rename...");
-                fileNameChanger.ReIDFiles(path);
+                Logger.Announce("Import Ignore All Warning?(y/n)");
+                if (Console.ReadLine() == "y")
+                {
+                    Logger.Announce("Starting Basic Rename...");
+                    fileNameChanger.RenameFiles(correctFiles, false);
+                    Logger.Success("Done~");
+                    Logger.Announce("Starting Advance Rename...");
+                    fileNameChanger.ReIDFiles(path);
 
-                fileNameChangerDict.TryGetValue("eventName", out string eventName);
-                fileNameChanger.RenameIngredientPNGFiles(Path.Combine(path, "Ingredient"), eventName);
-                fileNameChanger.RenameNPCPngFiles(Path.Combine(path, "Npc"), eventName);
-                fileNameChanger.RenameBossPngFiles(Path.Combine(path, "Boss"), eventName);
-                //}
+                    fileNameChangerDict.TryGetValue("eventName", out string eventName);
+                    fileNameChanger.RenameIngredientPNGFiles(Path.Combine(path, "Ingredient"), eventName);
+                    fileNameChanger.RenameNPCPngFiles(Path.Combine(path, "Npc"), eventName);
+                    fileNameChanger.RenameBossPngFiles(Path.Combine(path, "Boss"), eventName);
+                }
             }
             void MovingFolder(string path)
             {
-                //Logger.Announce("Input mmo_mft/code/asset Link: ");
-                //string assetLink = Console.ReadLine();
-                string assetLink = "D:\\WorkSpace\\Fork\\mmo_nft\\Code\\Assets";
+
                 FolderMover folderMover = new FolderMover();
                 string eventName = ConfigController.GetLastFolderName(path);
                 string folderEventPath = Path.Combine(assetLink, $"Game\\Event\\{eventName}");
@@ -70,7 +69,6 @@ namespace SpriteNormalizer
             }
             void UpdateMetaFile(string path)
             {
-                string assetLink = "D:\\WorkSpace\\Fork\\mmo_nft\\Code\\Assets";
                 string eventName = ConfigController.GetLastFolderName(path);
                 string templatePath = ConfigController.GetTemplatePath();
                 string folderEventPath = Path.Combine(assetLink, $"Game\\Event\\{eventName}");
@@ -88,7 +86,6 @@ namespace SpriteNormalizer
             void MovingFile(string path)
             {
                 string txtFileNameChanger = ConfigController.LoadTxT(AppDomain.CurrentDomain.BaseDirectory, "FileNameChanger_Config");
-                string assetLink = "D:\\WorkSpace\\Fork\\mmo_nft\\Code\\Assets";
                 string eventName = ConfigController.GetLastFolderName(path);
                 UnitySetupFile unitySetup = new UnitySetupFile();
                 string folderEventPath = Path.Combine(assetLink, $"Game\\Event\\{eventName}");
@@ -102,6 +99,7 @@ namespace SpriteNormalizer
                 unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Skin"), folderItemPath);
                 unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Pet\\Evo"), folderPetpath, eventName);
                 unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Pet"), folderPetpath, eventName);
+
                 unitySetup.ReAlignBossFolder(Path.Combine(folderEventPath, "Boss"), Path.Combine(folderEventPath, "Boss\\Graphic"));
             }
             #endregion
