@@ -20,6 +20,11 @@ public class ConfigController
             return "?";
         }
     }
+    public static string GetLastFolderName(string link)
+    {
+        link = link.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return Path.GetFileName(link);
+    }
     public static Dictionary<string,string> FileNameChangerConverter(string txtConfig)
     {
         Dictionary<string, string> result = new Dictionary<string, string>();

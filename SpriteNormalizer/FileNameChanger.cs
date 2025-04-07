@@ -416,4 +416,200 @@ class FileNameChanger
 
         ReID(tempFiles);
     }
+    public void RenameIngredientPNGFiles(string pathIngredient, string eventName)
+    {
+        // Lấy danh sách file .png trong thư mục (chỉ cấp hiện tại)
+        string[] pngFiles = Directory.GetFiles(pathIngredient, "*.png");
+
+        // Chạy vòng lặp để đổi tên từng file
+        for (int i = 0; i < pngFiles.Length; i++)
+        {
+            // Lấy đường dẫn cũ
+            string oldFilePath = pngFiles[i];
+
+            // Tạo tên mới cho file
+            // Ví dụ: "MyEvent Item_1.png", "MyEvent Item_2.png"...
+            string newFileName = $"{eventName} Item_{i}.png";
+
+            // Kết hợp path + tên file mới để ra đường dẫn đầy đủ
+            string newFilePath = Path.Combine(pathIngredient, newFileName);
+
+            // Đổi tên file
+            File.Move(oldFilePath, newFilePath);
+        }
+    }
+
+    public void RenameNPCPngFiles(string path, string eventName)
+    {
+        // 1) Lấy tất cả file .png trong thư mục
+        string[] allPngFiles = Directory.GetFiles(path, "*.png");
+        if (allPngFiles.Length == 0)
+        {
+            Console.WriteLine("Không tìm thấy file .png nào trong thư mục: " + path);
+            return;
+        }
+
+        // 2) Lấy 1 file bất kỳ để phân tích eventName (giả sử file format: eventName_Key_Value.png)
+        //    Nếu bạn luôn truyền eventName từ bên ngoài, có thể bỏ qua bước này.
+        string sampleFile = allPngFiles[0];
+        string sampleNameWithoutExt = Path.GetFileNameWithoutExtension(sampleFile);
+        // Tách tên file theo dấu '_'
+        string[] parts = sampleNameWithoutExt.Split('_');
+        if (parts.Length < 2)
+        {
+            Console.WriteLine("File mẫu không đúng định dạng eventName_Key_Value. " +
+                              "Không thể xác định eventName từ file: " + sampleFile);
+            return;
+        }
+
+        // 3) Duyệt qua tất cả file .png, phân tích Key và đổi tên
+        for (int i = 0; i < allPngFiles.Length; i++)
+        {
+            string oldFilePath = allPngFiles[i];
+            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(oldFilePath);
+            string fileExtension = Path.GetExtension(oldFilePath);
+
+            // Tách tên file để lấy ra Key (phần thứ hai)
+            string[] fileParts = fileNameWithoutExt.Split('_');
+            if (fileParts.Length < 2)
+            {
+                // Nếu file không có định dạng eventName_Key_..., bỏ qua hoặc xử lý tùy ý
+                continue;
+            }
+            string key = fileParts[1];  // Giả sử file dạng eventName_Key_...
+
+            // Xác định tên file mới dựa trên Key
+            string newKey = key;
+            switch (key)
+            {
+                case "Back":
+                    newKey = "Back";
+                    break;
+                case "Boot":
+                    newKey = "Pant";
+                    break;
+                case "Cloth":
+                    newKey = "Armor";
+                    break;
+                case "Helmet":
+                    newKey = "Helmet";
+                    break;
+                case "Weapon":
+                    newKey = "Weapon";
+                    break;
+                default:
+                    // Nếu file không nằm trong nhóm cần đổi
+                    // có thể bỏ qua hoặc xử lý riêng
+                    continue;
+            }
+
+            // Định dạng tên mới: newKey_eventName + .png
+            string newFileName = $"{newKey}_{eventName}{fileExtension}";
+            string newFilePath = Path.Combine(path, newFileName);
+
+            // Thực hiện đổi tên (move)
+            File.Move(oldFilePath, newFilePath);
+        }
+    }
+    public void RenameBossPngFiles(string path, string eventName)
+    {
+        // Bước 1: Đổi tên file trong thư mục gốc (path)
+        // Lấy danh sách file .png có dạng eventName_Key_Value
+        string[] pngFiles = Directory.GetFiles(path, "*.png");
+
+        foreach (string oldFilePath in pngFiles)
+        {
+            // Tách tên file (bỏ phần mở rộng)
+            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(oldFilePath);
+            string fileExtension = Path.GetExtension(oldFilePath); // .png
+
+            // Tách theo '_' => [0] = eventName, [1] = Key, [2] = Value (giả sử đủ 3 phần)
+            string[] parts = fileNameWithoutExt.Split('_');
+
+            // Đảm bảo file đúng định dạng, ít nhất có 3 phần
+            if (parts.Length < 3)
+            {
+                // Không đúng format => bỏ qua hoặc xử lý tùy ý
+                continue;
+            }
+
+            // Bóc tách eventName, key, value
+            string oldEventName = parts[0]; // Thường = eventName
+            string key = parts[1];
+            string value = parts[2];
+
+            // Xác định tiền tố mới dựa trên Key
+            string newPrefix;
+            switch (key)
+            {
+                case "Back":
+                    newPrefix = "BackBoss";
+                    break;
+                case "Boot":
+                    newPrefix = "PantBoss";
+                    break;
+                case "Cloth":
+                    newPrefix = "ArmorBoss";
+                    break;
+                case "Helmet":
+                    newPrefix = "HelmetBoss";
+                    break;
+                case "Weapon":
+                    newPrefix = "Weapons";
+                    break;
+                default:
+                    // Nếu không nằm trong nhóm cần đổi thì bỏ qua
+                    continue;
+            }
+
+            // Tạo tên file mới: newPrefix_eventName_Value + đuôi .png
+            // Ví dụ: BackBoss_EventABC_01.png
+            string newFileName = $"{newPrefix}_{eventName}_{value}{fileExtension}";
+
+            // Ghép đường dẫn đầy đủ
+            string newFilePath = Path.Combine(path, newFileName);
+
+            // Đổi tên file
+            File.Move(oldFilePath, newFilePath);
+        }
+
+        // Bước 2: Đổi tên file trong thư mục con icon (path\icon)
+        string iconFolder = Path.Combine(path, "icon");
+        if (Directory.Exists(iconFolder))
+        {
+            // Lấy tất cả file .png
+            string[] iconPngFiles = Directory.GetFiles(iconFolder, "*.png");
+            foreach (string oldIconFilePath in iconPngFiles)
+            {
+                string iconNameWithoutExt = Path.GetFileNameWithoutExtension(oldIconFilePath);
+                string iconExtension = Path.GetExtension(oldIconFilePath); // .png
+
+                // Có thể file icon cũ cũng có cấu trúc Key/Value, 
+                // hoặc chỉ đơn giản tách ra Value. 
+                // Ở đây ta giả định format cũ = eventName_Key_Value hoặc 
+                // <bất kỳ>_Value => ta chỉ cần Value từ phần cuối.
+                string[] iconParts = iconNameWithoutExt.Split('_');
+                if (iconParts.Length < 2)
+                {
+                    // Nếu không đủ phần => bỏ qua hoặc xử lý tùy ý
+                    continue;
+                }
+
+                // Giả sử value là phần cuối
+                string iconValue = iconParts[iconParts.Length - 1];
+
+                // Tạo tên mới: "IconBoss{eventName}_Value.png"
+                // Ví dụ: IconBossEventABC_03.png
+                string newIconFileName = $"IconBoss{eventName}_{iconValue}{iconExtension}";
+                string newIconFilePath = Path.Combine(iconFolder, newIconFileName);
+
+                // Đổi tên
+                File.Move(oldIconFilePath, newIconFilePath);
+            }
+        }
+        else
+        {
+            Console.WriteLine("Không tìm thấy thư mục icon tại: " + iconFolder);
+        }
+    }
 }
