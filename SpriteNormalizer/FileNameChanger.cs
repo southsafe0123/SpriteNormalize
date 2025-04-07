@@ -337,7 +337,167 @@ class FileNameChanger
         Logger.Announce("Done~");
         CheckWrongTypeAndName(path, out List<string> correctFiles2, false);
         Logger.Announce("Re ID Evo File...");
-        ReIDEvo(path);
+        RenamePetEvoFiles(Path.Combine(path,"Pet\\Evo"));
+        RenameSkinEvoFiles(Path.Combine(path, "Skin\\Evo"));
+        //ReIDEvo(path);
+    }
+    public void RenameSkinEvoFiles(string pathSkinEvo)
+    {
+        if (!Directory.Exists(pathSkinEvo))
+        {
+            Console.WriteLine("Skin Evo path does not exist.");
+            return;
+        }
+
+        string pathSkinParent = Directory.GetParent(pathSkinEvo).FullName;
+
+        // Step 3: Get all PNGs in parent folder (no subfolders)
+        string[] parentPngFiles = Directory.GetFiles(pathSkinParent, "*.png", SearchOption.TopDirectoryOnly);
+
+        // Step 4: Parse Value and Key to find max Key per Value
+        Dictionary<string, int> currentIds = new Dictionary<string, int>();
+
+        foreach (string filePath in parentPngFiles)
+        {
+            string name = Path.GetFileNameWithoutExtension(filePath);
+            string[] parts = name.Split('_');
+            if (parts.Length < 3) continue;
+
+            string value = parts[1];
+            if (int.TryParse(parts[2], out int key))
+            {
+                if (!currentIds.ContainsKey(value) || currentIds[value] < key)
+                {
+                    currentIds[value] = key;
+                }
+            }
+        }
+
+        // Step 5: Get all PNGs in evo (include subfolders)
+        string[] evoPngFiles = Directory.GetFiles(pathSkinEvo, "*.png", SearchOption.AllDirectories);
+
+        // Step 6 & 7: Group by file name (no extension) to keep consistent renaming
+        Dictionary<string, List<string>> nameGroups = new Dictionary<string, List<string>>();
+
+        foreach (string filePath in evoPngFiles)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            if (!nameGroups.ContainsKey(fileName))
+            {
+                nameGroups[fileName] = new List<string>();
+            }
+            nameGroups[fileName].Add(filePath);
+        }
+
+        // Map for temp renaming
+        Dictionary<string, string> renameMap = new Dictionary<string, string>();
+
+        foreach (var group in nameGroups)
+        {
+            string name = group.Key;
+            string[] parts = name.Split('_');
+            if (parts.Length < 3) continue;
+
+            string value = parts[1];
+
+            if (!currentIds.ContainsKey(value))
+            {
+                currentIds[value] = 0;
+            }
+
+            int newId = ++currentIds[value];
+            parts[2] = newId.ToString();
+            string newName = string.Join("_", parts) + "_temp.png";
+
+            foreach (string originalPath in group.Value)
+            {
+                string newFullPath = Path.Combine(Path.GetDirectoryName(originalPath), newName);
+                File.Move(originalPath, newFullPath);
+                renameMap[originalPath] = newFullPath;
+            }
+        }
+
+        // Step 9: Remove "_temp" to finalize names
+        foreach (var entry in renameMap)
+        {
+            string tempPath = entry.Value;
+            string finalName = Path.GetFileName(tempPath).Replace("_temp", "");
+            string finalPath = Path.Combine(Path.GetDirectoryName(tempPath), finalName);
+
+            File.Move(tempPath, finalPath);
+        }
+
+        Console.WriteLine("Renaming completed.");
+    }
+    public void RenamePetEvoFiles(string pathEvo)
+    {
+        if (!Directory.Exists(pathEvo))
+        {
+            Console.WriteLine("Evo path does not exist.");
+            return;
+        }
+
+        string pathParent = Directory.GetParent(pathEvo).FullName;
+
+        // Step 3: Get all PNGs in parent folder (not subfolders)
+        string[] parentPngFiles = Directory.GetFiles(pathParent, "*.png", SearchOption.TopDirectoryOnly);
+        int currentId = parentPngFiles.Length;
+
+        // Step 5: Get all PNGs in evo folder (include subfolders)
+        string[] evoPngFiles = Directory.GetFiles(pathEvo, "*.png", SearchOption.AllDirectories);
+
+        // Map original name without extension to list of file paths
+        Dictionary<string, List<string>> nameGroups = new Dictionary<string, List<string>>();
+
+        foreach (string filePath in evoPngFiles)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            if (!nameGroups.ContainsKey(fileName))
+            {
+                nameGroups[fileName] = new List<string>();
+            }
+            nameGroups[fileName].Add(filePath);
+        }
+
+        // Store mapping from original path to temp renamed path
+        Dictionary<string, string> renameMap = new Dictionary<string, string>();
+
+        foreach (var group in nameGroups)
+        {
+            string originalName = group.Key;
+            string[] parts = originalName.Split('_');
+
+            if (parts.Length < 3)
+            {
+                Console.WriteLine($"Skipped invalid name: {originalName}");
+                continue;
+            }
+
+            // Replace Key (last part) with currentId and add "_temp"
+            parts[2] = currentId.ToString();
+            string newName = string.Join("_", parts) + "_temp.png";
+
+            foreach (string originalPath in group.Value)
+            {
+                string newFullPath = Path.Combine(Path.GetDirectoryName(originalPath), newName);
+                File.Move(originalPath, newFullPath);
+                renameMap[originalPath] = newFullPath;
+            }
+
+            currentId++;
+        }
+
+        // Step 9: Remove "_temp" from renamed files
+        foreach (var entry in renameMap)
+        {
+            string tempPath = entry.Value;
+            string finalName = Path.GetFileName(tempPath).Replace("_temp", "");
+            string finalPath = Path.Combine(Path.GetDirectoryName(tempPath), finalName);
+
+            File.Move(tempPath, finalPath);
+        }
+
+        Console.WriteLine("Renaming completed.");
     }
     void ReID(List<string> correctFiles)
     {

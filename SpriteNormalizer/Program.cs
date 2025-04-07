@@ -9,12 +9,24 @@ namespace SpriteNormalizer
     {
         static void Main()
         {
+            Logger.Announce("Step 1: Checking and Renaming");
             Logger.Announce("Input Event Folder Link: ");
             string folderLink = Console.ReadLine();
-            Logger.Announce("Input mmo_mft/code/asset Link: ");
-            string assetLink = Console.ReadLine();
-            CheckFolder(folderLink);
+            Logger.Announce("Checking...");
+            do
+            {
+                CheckFolder(folderLink);
+                Logger.Announce("Done... Rechecking?(y/n)");
+            } while (Console.ReadLine() == "y");
             RenameFile(folderLink);
+
+            Logger.Announce("Step 2: Importing");
+            Logger.Announce("Input mmo_mft/code/asset Link: ");
+            string assetLink = Console.ReadLine();  
+            do
+            {
+                Logger.Warning("Import to Unity ignore all warning before?(y/n) ");
+            } while (Console.ReadLine() == "n");
             MovingFolder(folderLink);
             UpdateMetaFile(folderLink);
             MovingFile(folderLink);
@@ -35,20 +47,22 @@ namespace SpriteNormalizer
 
                 fileNameChanger.CheckFile(path, out List<string> correctFiles);
 
-                Logger.Announce("Import Ignore All Warning?(y/n)");
-                if (Console.ReadLine() == "y")
+                do
                 {
-                    Logger.Announce("Starting Basic Rename...");
-                    fileNameChanger.RenameFiles(correctFiles, false);
-                    Logger.Success("Done~");
-                    Logger.Announce("Starting Advance Rename...");
-                    fileNameChanger.ReIDFiles(path);
+                    Logger.Announce("Rename Ignore All Warning?(y/n)");
+                } while (Console.ReadLine() == "n");
 
-                    fileNameChangerDict.TryGetValue("eventName", out string eventName);
-                    fileNameChanger.RenameIngredientPNGFiles(Path.Combine(path, "Ingredient"), eventName);
-                    fileNameChanger.RenameNPCPngFiles(Path.Combine(path, "Npc"), eventName);
-                    fileNameChanger.RenameBossPngFiles(Path.Combine(path, "Boss"), eventName);
-                }
+                Logger.Announce("Starting Basic Rename...");
+                fileNameChanger.RenameFiles(correctFiles, false);
+                Logger.Announce("Starting Advance Rename...");
+                fileNameChanger.ReIDFiles(path);
+
+                fileNameChangerDict.TryGetValue("eventName", out string eventName);
+                fileNameChanger.RenameIngredientPNGFiles(Path.Combine(path, "Ingredient"), eventName);
+                fileNameChanger.RenameNPCPngFiles(Path.Combine(path, "Npc"), eventName);
+                fileNameChanger.RenameBossPngFiles(Path.Combine(path, "Boss"), eventName);
+                Logger.Success("Done~");
+
             }
             void MovingFolder(string path)
             {
