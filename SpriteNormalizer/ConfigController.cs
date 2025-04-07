@@ -20,6 +20,16 @@ public class ConfigController
             return "?";
         }
     }
+    public static string GetTemplatePath()
+    {
+        // Lấy thư mục hiện tại nơi file .exe đang chạy (bin\Debug hoặc bin\Release)
+        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+        // Ghép thêm "Template"
+        string templatePath = Path.Combine(baseDirectory, "Template");
+
+        return templatePath;
+    }
     public static string GetLastFolderName(string link)
     {
         link = link.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);

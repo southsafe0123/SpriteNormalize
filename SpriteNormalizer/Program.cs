@@ -70,7 +70,7 @@ namespace SpriteNormalizer
             {
                 string assetLink = "D:\\WorkSpace\\Fork\\mmo_nft\\Code\\Assets";
                 string eventName = ConfigController.GetLastFolderName(path);
-                string templatePath = Path.Combine(assetLink, $"Game\\Anntest\\Template");
+                string templatePath = ConfigController.GetTemplatePath();
                 string folderEventPath = Path.Combine(assetLink, $"Game\\Event\\{eventName}");
                 UnitySetupFile unitySetup = new UnitySetupFile();
                 unitySetup.CreateNewMetaFilesUIIcon(Path.Combine(templatePath, "IconTemplate.png.meta"), Path.Combine(folderEventPath, "UIIcon"));

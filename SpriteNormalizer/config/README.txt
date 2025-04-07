@@ -1,0 +1,1 @@
+put all these file into ...SpriteNormalize\SpriteNormalizer\bin\Debug

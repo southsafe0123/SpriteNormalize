@@ -61,17 +61,18 @@ public class UnitySetupFile
         }
         File.WriteAllLines(metaFilePath, lines);
     }
+
     public void CreateNewMetaFilesBoss(string templatePath, string bossPath)
     {
         if (!Directory.Exists(templatePath))
         {
-            Console.WriteLine("Không tìm thấy thư mục template: " + templatePath);
+            Logger.Error("Template not found: " + templatePath);
             return;
         }
 
         if (!Directory.Exists(bossPath))
         {
-            Console.WriteLine("Không tìm thấy thư mục boss: " + bossPath);
+            Logger.Error("Boss path not found: " + bossPath);
             return;
         }
 
@@ -80,7 +81,7 @@ public class UnitySetupFile
         string[] bossFiles = Directory.GetFiles(bossPath);
         if (bossFiles.Length == 0)
         {
-            Console.WriteLine("Không có file nào trong bossPath: " + bossPath);
+            Logger.Error("Not found any file in BossPath: " + bossPath);
             return;
         }
 
@@ -97,7 +98,7 @@ public class UnitySetupFile
             string[] parts = fileNameWithoutExt.Split('_');
             if (parts.Length < 3)
             {
-                Console.WriteLine($"File '{fileName}' không đúng dạng Key_eventName_Value. Bỏ qua.");
+                Logger.Warning($"File '{fileName}' wrong type Key_eventName_Value. Skiped!");
                 continue;
             }
 
@@ -114,7 +115,7 @@ public class UnitySetupFile
 
             if (!File.Exists(templateMetaFilePath))
             {
-                Console.WriteLine($"Không tìm thấy template meta cho key '{key}': {templateMetaFilePath}");
+                Logger.Warning($"Not found template meta for key '{key}': {templateMetaFilePath}");
                 continue;
             }
 
@@ -130,10 +131,8 @@ public class UnitySetupFile
             // Ghi GUID mới vào meta
             ReplaceGuidInMeta(newMetaFilePath, newGuid);
 
-            Console.WriteLine($"Đã tạo meta cho file '{fileName}' với key '{key}', GUID {newGuid}.");
+            Logger.Success($"Created metafile '{fileName}'");
         }
-
-        Console.WriteLine("Hoàn tất cập nhật meta cho tất cả file trong boss.");
     }
 
     /// <summary>
@@ -143,12 +142,13 @@ public class UnitySetupFile
     {
         if (!Directory.Exists(templatePath))
         {
-            Console.WriteLine("Không tìm thấy thư mục template: " + templatePath);
+            Logger.Error("Template not found: " + templatePath);
             return;
         }
         if (!Directory.Exists(equipmentPath))
         {
-            Console.WriteLine("Không tìm thấy thư mục equipment: " + equipmentPath);
+
+            Logger.Error("equipment path not found: " + equipmentPath);
             return;
         }
 
@@ -157,7 +157,7 @@ public class UnitySetupFile
         string[] equipmentFiles = Directory.GetFiles(equipmentPath, "*.png");
         if (equipmentFiles.Length == 0)
         {
-            Console.WriteLine("Không có file .png nào trong: " + equipmentPath);
+            Logger.Error("Not found any file in Equipment Path: " + equipmentPath);
             return;
         }
 
@@ -172,7 +172,7 @@ public class UnitySetupFile
             string[] parts = fileNameWithoutExt.Split('_');
             if (parts.Length < 3)
             {
-                Console.WriteLine($"File '{fileName}' không đúng dạng eventName_Key_Value. Bỏ qua.");
+                Logger.Warning($"File '{fileName}' wrong type Key_eventName_Value. Skiped!");
                 continue;
             }
 
@@ -185,7 +185,7 @@ public class UnitySetupFile
 
             if (!File.Exists(templateMetaFilePath))
             {
-                Console.WriteLine($"Không tìm thấy template meta cho key '{key}': {templateMetaFilePath}");
+                Logger.Warning($"Not found template meta for key '{key}': {templateMetaFilePath}");
                 continue;
             }
 
@@ -201,21 +201,19 @@ public class UnitySetupFile
             // Thay GUID trong file meta
             ReplaceGuidInMeta(newMetaFilePath, newGuid);
 
-            Console.WriteLine($"Đã tạo meta cho file '{fileName}' (Key='{key}'), GUID={newGuid}.");
+            Logger.Success($"Created metafile '{fileName}'");
         }
-
-        Console.WriteLine("Hoàn tất cập nhật meta cho các file trong Equipment.");
     }
-    public  void CreateNewMetaFilesNPC(string templatePath, string npcPath)
+    public void CreateNewMetaFilesNPC(string templatePath, string npcPath)
     {
         if (!Directory.Exists(templatePath))
         {
-            Console.WriteLine("Không tìm thấy thư mục template: " + templatePath);
+            Logger.Error("Template not found: " + templatePath);
             return;
         }
         if (!Directory.Exists(npcPath))
         {
-            Console.WriteLine("Không tìm thấy thư mục npcPath: " + npcPath);
+            Logger.Error("Npc path not found: " + npcPath);
             return;
         }
 
@@ -223,7 +221,7 @@ public class UnitySetupFile
         string[] npcFiles = Directory.GetFiles(npcPath, "*.png");
         if (npcFiles.Length == 0)
         {
-            Console.WriteLine("Không có file .png nào trong npcPath: " + npcPath);
+            Logger.Error("Not found any file in NPC Path: " + npcPath);
             return;
         }
 
@@ -237,7 +235,7 @@ public class UnitySetupFile
             string[] parts = fileNameWithoutExt.Split('_');
             if (parts.Length < 2)
             {
-                Console.WriteLine($"File '{fileName}' không đúng định dạng Key_eventName. Bỏ qua.");
+                Logger.Warning($"File '{fileName}' wrong type Key_eventName_Value. Skiped!");
                 continue;
             }
 
@@ -252,7 +250,7 @@ public class UnitySetupFile
 
             if (!File.Exists(templateMetaFilePath))
             {
-                Console.WriteLine($"Không tìm thấy template meta cho key '{key}': {templateMetaFilePath}");
+                Logger.Warning($"Not found template meta for key '{key}': {templateMetaFilePath}");
                 continue;
             }
 
@@ -268,30 +266,29 @@ public class UnitySetupFile
             // Ghi GUID vào meta
             ReplaceGuidInMeta(newMetaFilePath, newGuid);
 
-            Console.WriteLine($"Đã tạo meta cho file '{fileName}' (Key='{key}'), GUID={newGuid}.");
+            Logger.Success($"Created metafile '{fileName}'");
         }
 
-        Console.WriteLine("Hoàn tất cập nhật meta cho các file NPC.");
     }
 
     public void CreateNewMetaFilesPet(string templatePath, string petPath)
     {
         if (!Directory.Exists(templatePath))
         {
-            Console.WriteLine("❌ Không tìm thấy thư mục template: " + templatePath);
+            Logger.Error("Template not found: " + templatePath);
             return;
         }
 
         if (!Directory.Exists(petPath))
         {
-            Console.WriteLine("❌ Không tìm thấy thư mục pet: " + petPath);
+            Logger.Error("Pet path not found: " + petPath);
             return;
         }
 
         string[] petFiles = Directory.GetFiles(petPath, "*.png");
         if (petFiles.Length == 0)
         {
-            Console.WriteLine("⚠️ Không có file .png nào trong thư mục pet.");
+            Logger.Error("Not found any file in PetPath: " + petPath);
             return;
         }
 
@@ -303,7 +300,7 @@ public class UnitySetupFile
             string[] parts = fileNameWithoutExt.Split('_');
             if (parts.Length < 3)
             {
-                Console.WriteLine($"⚠️ File '{fileName}' không đúng định dạng eventName_Key_Value. Bỏ qua.");
+                Logger.Warning($"File '{fileName}' wrong type Key_eventName_Value. Skiped!");
                 continue;
             }
 
@@ -314,7 +311,7 @@ public class UnitySetupFile
 
             if (!File.Exists(templateFilePath))
             {
-                Console.WriteLine($"⚠️ Không tìm thấy template tương ứng với Key '{key}': {templateFilePath}");
+                Logger.Warning($"Not found template meta for key '{key}': {templateFilePath}");
                 continue;
             }
 
@@ -324,31 +321,29 @@ public class UnitySetupFile
 
             string newGuid = Guid.NewGuid().ToString("N");
             ReplaceGuidInMeta(newMetaFilePath, newGuid);
-
-            Console.WriteLine($"✅ Đã tạo meta cho '{fileName}' với GUID mới: {newGuid}");
+            Logger.Success($"Created metafile '{fileName}'");
         }
-
-        Console.WriteLine("🎉 Hoàn tất cập nhật file meta cho thư mục Pet.");
     }
 
     public void CreateNewMetaFilesSkin(string templatePath, string skinPath)
     {
         if (!Directory.Exists(templatePath))
         {
-            Console.WriteLine("❌ Không tìm thấy thư mục template: " + templatePath);
+            Logger.Error("Template not found: " + templatePath);
             return;
         }
 
         if (!Directory.Exists(skinPath))
         {
-            Console.WriteLine("❌ Không tìm thấy thư mục skin: " + skinPath);
+            Logger.Error("Skin path not found: " + skinPath);
             return;
         }
 
         string[] skinFiles = Directory.GetFiles(skinPath, "*.png");
         if (skinFiles.Length == 0)
         {
-            Console.WriteLine("⚠️ Không có file .png nào trong thư mục skin.");
+            Logger.Error("Not found any file in Skin path: " + skinPath);
+
             return;
         }
 
@@ -360,7 +355,7 @@ public class UnitySetupFile
 
             if (parts.Length < 3)
             {
-                Console.WriteLine($"⚠️ File '{fileName}' không đúng định dạng eventName_Key_Value. Bỏ qua.");
+                Logger.Warning($"File '{fileName}' wrong type Key_eventName_Value. Skiped!");
                 continue;
             }
 
@@ -372,7 +367,7 @@ public class UnitySetupFile
 
             if (!File.Exists(templateMetaFilePath))
             {
-                Console.WriteLine($"⚠️ Không tìm thấy template tương ứng với Key '{key}': {templateMetaFilePath}");
+                Logger.Warning($"Not found template meta for key '{key}': {templateMetaFilePath}");
                 continue;
             }
 
@@ -382,24 +377,22 @@ public class UnitySetupFile
 
             string newGuid = Guid.NewGuid().ToString("N");
             ReplaceGuidInMeta(newMetaFilePath, newGuid);
-
-            Console.WriteLine($"✅ Đã tạo meta cho '{fileName}' với template '{templateMetaFileName}', GUID: {newGuid}");
+            Logger.Success($"Created metafile '{fileName}'");
         }
 
-        Console.WriteLine("🎉 Hoàn tất cập nhật meta cho tất cả file trong Skin.");
     }
     public void CreateNewMetaFilesElement(string templatePath, string elementPath)
     {
         string templateMetaFile = Path.Combine(templatePath, "ElementTemplate.png.meta");
         if (!File.Exists(templateMetaFile))
         {
-            Console.WriteLine("❌ Không tìm thấy template meta: " + templateMetaFile);
+            Logger.Error("Template not found: " + elementPath);
             return;
         }
 
         if (!Directory.Exists(elementPath))
         {
-            Console.WriteLine("❌ Không tìm thấy thư mục element: " + elementPath);
+            Logger.Error("Element path not found: " + elementPath);
             return;
         }
 
@@ -407,7 +400,7 @@ public class UnitySetupFile
         string[] allFiles = Directory.GetFiles(elementPath, "*.*", SearchOption.AllDirectories);
         if (allFiles.Length == 0)
         {
-            Console.WriteLine("⚠️ Không tìm thấy file nào trong Element.");
+            Logger.Error("Not found any file in element path: " + elementPath);
             return;
         }
 
@@ -424,9 +417,7 @@ public class UnitySetupFile
             string newGuid = Guid.NewGuid().ToString("N");
             ReplaceGuidInMeta(metaFilePath, newGuid);
 
-            Console.WriteLine($"✅ Meta created for: {filePath}, GUID: {newGuid}");
         }
-
-        Console.WriteLine("🎉 Hoàn tất tạo file meta cho toàn bộ file trong Element (bao gồm thư mục con).");
+        Logger.Success($"Created meta for elemnt folder too...");
     }
 }
