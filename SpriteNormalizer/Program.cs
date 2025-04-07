@@ -16,6 +16,7 @@ namespace SpriteNormalizer
             //RenameFile(folderLink);
             MovingFolder(folderLink);
             UpdateMetaFile(folderLink);
+            MovingFile(folderLink);
             #region Function
             void CheckFolder(string path)
             {
@@ -36,11 +37,11 @@ namespace SpriteNormalizer
                 //Logger.Announce("Rename Ignore All Warning?(y/n)");
                 //if (Console.ReadLine() == "y")
                 //{
-                    Logger.Announce("Starting Basic Rename...");
-                    fileNameChanger.RenameFiles(correctFiles, false);
-                    Logger.Success("Done~");
-                    Logger.Announce("Starting Advance Rename...");
-                    fileNameChanger.ReIDFiles(path);
+                Logger.Announce("Starting Basic Rename...");
+                fileNameChanger.RenameFiles(correctFiles, false);
+                Logger.Success("Done~");
+                Logger.Announce("Starting Advance Rename...");
+                fileNameChanger.ReIDFiles(path);
 
                 fileNameChangerDict.TryGetValue("eventName", out string eventName);
                 fileNameChanger.RenameIngredientPNGFiles(Path.Combine(path, "Ingredient"), eventName);
@@ -57,13 +58,14 @@ namespace SpriteNormalizer
                 string eventName = ConfigController.GetLastFolderName(path);
                 string folderEventPath = Path.Combine(assetLink, $"Game\\Event\\{eventName}");
                 bool isEventFolderExsist = folderMover.CheckEventFolderExists(folderEventPath);
-                if (isEventFolderExsist) {
+                if (isEventFolderExsist)
+                {
                     Logger.Warning($"Event folder exsist: {eventName}");
                     return;
                 }
                 folderMover.CopyFolder(path, folderEventPath);
                 folderMover.CreateUIIconAndCopyFiles(folderEventPath);
-                folderMover.MoveIngredientFiles(Path.Combine(folderEventPath,"Ingredient"), Path.Combine(folderEventPath, "UIIcon"));
+                folderMover.MoveIngredientFiles(Path.Combine(folderEventPath, "Ingredient"), Path.Combine(folderEventPath, "UIIcon"));
                 Logger.Success($"Done...");
             }
             void UpdateMetaFile(string path)
@@ -82,11 +84,27 @@ namespace SpriteNormalizer
                 unitySetup.CreateNewMetaFilesSkin(templatePath, Path.Combine(folderEventPath, "Skin"));
                 unitySetup.CreateNewMetaFilesSkin(templatePath, Path.Combine(folderEventPath, "Skin\\Evo"));
                 unitySetup.CreateNewMetaFilesElement(templatePath, Path.Combine(folderEventPath, "Element"));
+            }
+            void MovingFile(string path)
+            {
+                string txtFileNameChanger = ConfigController.LoadTxT(AppDomain.CurrentDomain.BaseDirectory, "FileNameChanger_Config");
+                string assetLink = "D:\\WorkSpace\\Fork\\mmo_nft\\Code\\Assets";
+                string eventName = ConfigController.GetLastFolderName(path);
+                UnitySetupFile unitySetup = new UnitySetupFile();
+                string folderEventPath = Path.Combine(assetLink, $"Game\\Event\\{eventName}");
+                string folderUIIconPath = Path.Combine(assetLink, "Game\\GameAssets\\UIIcons");
+                string folderItemPath = Path.Combine(assetLink, "Resources\\Icons\\Items");
+                string folderPetpath = Path.Combine(assetLink, "Packages\\PixelFantasy\\PixelMonsters\\Event");
 
+                unitySetup.MoveAllFilesUIICon(Path.Combine(folderEventPath, "UIIcon"), folderUIIconPath);
+                unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Equipment"), folderItemPath);
+                unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Skin\\Evo"), folderItemPath);
+                unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Skin"), folderItemPath);
+                unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Pet\\Evo"), folderPetpath, eventName);
+                unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Pet"), folderPetpath, eventName);
+                unitySetup.ReAlignBossFolder(Path.Combine(folderEventPath, "Boss"), Path.Combine(folderEventPath, "Boss\\Graphic"));
             }
             #endregion
         }
-
-
     }
 }

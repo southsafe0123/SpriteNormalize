@@ -420,4 +420,99 @@ public class UnitySetupFile
         }
         Logger.Success($"Created meta for elemnt folder too...");
     }
+
+    public void MoveAllFilesUIICon(string from, string to)
+    {
+        // Create destination directory if it doesn't exist
+        if (!Directory.Exists(to))
+        {
+            Directory.CreateDirectory(to);
+        }
+
+        // Get all files in the source directory
+        string[] files = Directory.GetFiles(from);
+
+        foreach (string file in files)
+        {
+            string fileName = Path.GetFileName(file);
+            string destPath = Path.Combine(to, fileName);
+
+            File.Copy(file, destPath, true); // Overwrite if exists
+        }
+
+        // Delete the source directory after copying
+        Directory.Delete(from, true); // true to delete subdirectories and files
+
+        Console.WriteLine("Move completed.");
+    }
+    public void MoveAllFiles(string from, string to, string customFolderName = "")
+    {
+        if (!Directory.Exists(from))
+        {
+            Console.WriteLine("Source folder does not exist.");
+            return;
+        }
+
+        // Get all files in source folder
+        string[] files = Directory.GetFiles(from);
+
+        foreach (string filePath in files)
+        {
+            string fileName = Path.GetFileName(filePath);
+            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
+
+            // Expected format: eventName_Key_Value
+            string[] parts = fileNameWithoutExt.Split('_');
+
+            if (parts.Length < 3)
+            {
+                Console.WriteLine($"Skipped invalid format: {fileName}");
+                continue;
+            }
+
+            string key = parts[1];
+            string targetFolder = customFolderName == "" ? Path.Combine(to, key) : Path.Combine(to, customFolderName);
+
+            if (!Directory.Exists(targetFolder))
+            {
+
+                Directory.CreateDirectory(targetFolder);
+            }
+
+            string destPath = Path.Combine(targetFolder, fileName);
+
+            File.Copy(filePath, destPath, true); // Overwrite if exists
+        }
+
+        // Delete source folder after copying
+        Directory.Delete(from, true);
+
+        Console.WriteLine("All files moved and source folder deleted.");
+    }
+
+    public void ReAlignBossFolder(string from, string to)
+    {
+        if (!Directory.Exists(from))
+        {
+            Console.WriteLine("Source folder does not exist.");
+            return;
+        }
+
+        if (!Directory.Exists(to))
+        {
+            Directory.CreateDirectory(to);
+        }
+
+        string[] files = Directory.GetFiles(from);
+
+        foreach (string filePath in files)
+        {
+            string fileName = Path.GetFileName(filePath);
+            string destPath = Path.Combine(to, fileName);
+
+            File.Move(filePath, destPath); // Move file
+        }
+
+        Console.WriteLine("All files moved and source folder deleted.");
+    }
 }
