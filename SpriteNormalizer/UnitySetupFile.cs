@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System;
+using System.Diagnostics;
 public class UnitySetupFile
 {
     public void CreateNewMetaFilesUIIcon(string templatePath, string uiIconPath)
@@ -421,7 +422,7 @@ public class UnitySetupFile
         Logger.Success($"Created meta for elemnt folder too...");
     }
 
-    public void MoveAllFilesUIICon(string from, string to)
+    public void MoveAllFilesUIICon(string from, string to, string assetPath="")
     {
         // Create destination directory if it doesn't exist
         if (!Directory.Exists(to))
@@ -435,7 +436,12 @@ public class UnitySetupFile
         foreach (string file in files)
         {
             string fileName = Path.GetFileName(file);
+            if (fileName.Contains("IconBoss"))
+            {
+                to = Path.Combine(assetPath, "Game\\UI\\Graphic\\IconBoss");
+            }
             string destPath = Path.Combine(to, fileName);
+          
 
             File.Copy(file, destPath, true); // Overwrite if exists
         }
@@ -459,6 +465,7 @@ public class UnitySetupFile
         foreach (string filePath in files)
         {
             string fileName = Path.GetFileName(filePath);
+
             string fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
 
             // Expected format: eventName_Key_Value

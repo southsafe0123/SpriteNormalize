@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 class FolderMover
 {
@@ -54,7 +55,7 @@ class FolderMover
         // 2. Tìm các thư mục có tên "icon" hoặc "Icon" (nếu bạn chỉ cần 2 trường hợp này).
         //    Nếu muốn bắt mọi dạng chữ hoa/thường (Icon, ICON...), hãy dùng cách lọc thủ công (OrdinalIgnoreCase).
         string[] iconFolders = Directory.GetDirectories(eventFolder, "icon", SearchOption.AllDirectories);
-
+        
         // 3. Sao chép tất cả file trong mỗi folder tìm được sang UIIcon
         if (iconFolders.Length > 0)
         {

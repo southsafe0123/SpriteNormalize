@@ -107,7 +107,7 @@ namespace SpriteNormalizer
                 string folderItemPath = Path.Combine(assetLink, "Resources\\Icons\\Items");
                 string folderPetpath = Path.Combine(assetLink, "Packages\\PixelFantasy\\PixelMonsters\\Event");
 
-                unitySetup.MoveAllFilesUIICon(Path.Combine(folderEventPath, "UIIcon"), folderUIIconPath);
+                unitySetup.MoveAllFilesUIICon(Path.Combine(folderEventPath, "UIIcon"), folderUIIconPath,assetLink);
                 unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Equipment"), folderItemPath);
                 unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Skin\\Evo"), folderItemPath);
                 unitySetup.MoveAllFiles(Path.Combine(folderEventPath, "Skin"), folderItemPath);
