@@ -71,11 +71,11 @@ namespace SpriteNormalizer
                 string eventName = ConfigController.GetLastFolderName(path);
                 string folderEventPath = Path.Combine(assetLink, $"Game\\Event\\{eventName}");
                 bool isEventFolderExsist = folderMover.CheckEventFolderExists(folderEventPath);
-                if (isEventFolderExsist)
-                {
-                    Logger.Warning($"Event folder exsist: {eventName}");
-                    return;
-                }
+                //if (isEventFolderExsist)
+                //{
+                //    Logger.Warning($"Event folder exsist: {eventName}");
+                //    return;
+                //}
                 folderMover.CopyFolder(path, folderEventPath);
                 folderMover.CreateUIIconAndCopyFiles(folderEventPath);
                 folderMover.MoveIngredientFiles(Path.Combine(folderEventPath, "Ingredient"), Path.Combine(folderEventPath, "UIIcon"));
@@ -116,6 +116,8 @@ namespace SpriteNormalizer
 
                 unitySetup.ReAlignBossFolder(Path.Combine(folderEventPath, "Boss"), Path.Combine(folderEventPath, "Boss\\Graphic"));
             }
+            Logger.Success($"Done...");
+            Console.ReadLine();
             #endregion
         }
     }
